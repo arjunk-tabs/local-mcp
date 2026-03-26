@@ -12,16 +12,34 @@ Create well-structured pull requests that follow conventions and provide clear c
 
 ## Inputs
 
-1. **Git branch** — the feature branch with commits ready to be PR'd
+1. **Git branch** — the feature branch with commits ready to be PR'd. The branch name **must include the Linear issue identifier** (see [Branch name and Linear ticket](#branch-name-and-linear-ticket)).
 2. **Context** — what was implemented, what tickets/issues it addresses, any breaking changes
 3. **Project conventions** — PR title format, description structure, and custom checklist items
+
+## Branch name and Linear ticket
+
+Every PR branch must embed the **Linear issue ID** so work stays traceable to a ticket.
+
+- **Allowed prefixes (case-insensitive):** `TAB`, `AI`, `COR`, `SPEC`, `FIRE`, `TOR`, `ERP`, `PLA`, `BIL`, `CMG`, `BUG`, `FE`, `PLT`
+- **Format:** The branch name must contain one of the allowed prefixes followed by a hyphen and a number (e.g. `TAB-123`, `ai-456`, `FE-78`). Typical patterns: `feat/TAB-123-short-slug`, `TAB-123-feat-short-slug`, or `arjun/FE-123-description`.
+- **Detection:** After resolving the checked-out branch (`git branch --show-current`), match the case-insensitive pattern `(TAB|AI|COR|SPEC|FIRE|TOR|ERP|PLA|BIL|CMG|BUG|FE|PLT)-[0-9]+` anywhere in the branch name.
+
+### If the branch has no Linear ticket
+
+**Stop.** Do not draft the PR title, description, or run `gh pr create` until this is resolved.
+
+1. Tell the user the current branch name and that it does not include a Linear issue ID.
+2. Ask them for the Linear ticket identifier (or to rename the branch to include it).
+3. Resume only after they provide a valid ticket ID **and** the branch name contains that ID — e.g. they rename with `git branch -m old-name new-name-with-TAB-123` or create a new branch from the correct naming convention.
+
+If they only give you the ticket ID but do not update the branch name, remind them that the branch must still be renamed to include it before you continue.
 
 ## Output
 
 A GitHub pull request with:
 - Properly formatted title following conventional commits
 - Clear description with summary, issue references, and breaking change callouts
-- Custom, verifiable checklist items specific to the work
+- Custom, verifiable checklist items specific to the work, including manual sanity check test cases
 - Ready to be opened via `gh pr create` or similar
 
 ## PR Title Format
@@ -114,10 +132,17 @@ Fixes #456
 
 ## Steps
 
+### Step 0: Verify branch name includes Linear ticket
+
+- Resolve the current branch name (e.g. `git branch --show-current`).
+- Check that it contains one of the allowed Linear prefixes (`TAB`, `AI`, `COR`, `SPEC`, `FIRE`, `TOR`, `ERP`, `PLA`, `BIL`, `CMG`, `BUG`, `FE`, `PLT`) followed by `-` and a number (case-insensitive match).
+- **If missing:** follow [If the branch has no Linear ticket](#if-the-branch-has-no-linear-ticket) and do not proceed to Step 1 until fixed.
+
 ### Step 1: Gather Context
 
+- Extract the Linear issue ID from the branch name for references in the PR description (and cross-link to Linear if the project expects it).
 - Understand what was implemented
-- Identify related issues or tickets
+- Identify related issues or tickets (GitHub issues, etc., in addition to Linear)
 - Determine if there are any breaking changes
 - Know what specific items need to be verified in review
 
@@ -149,6 +174,7 @@ Show the user the PR title, description, and checklist. If they approve, create 
 
 ## Exit Criteria
 
+- [ ] Branch name includes a recognized Linear prefix (`TAB-`, `AI-`, `COR-`, `SPEC-`, `FIRE-`, `TOR-`, `ERP-`, `PLA-`, `BIL-`, `CMG-`, `BUG-`, `FE-`, `PLT-`) followed by a number
 - [ ] Title follows conventional commit format
 - [ ] Type and scope are appropriate for the work
 - [ ] Description includes summary, issue references, and breaking changes (if any)
@@ -158,6 +184,7 @@ Show the user the PR title, description, and checklist. If they approve, create 
 
 ## Rules
 
+- **Linear ticket in branch name is mandatory.** No PR flow without it — stop and ask if absent.
 - **Be concise.** PR titles feed into changelogs and commit histories.
 - **Be specific in checklists.** Vague criteria waste reviewer time.
 - **Call out breaking changes explicitly.** Don't bury them in the description.
