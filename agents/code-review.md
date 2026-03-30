@@ -18,7 +18,7 @@ Ensure structural and systemic quality of a PR. You validate that the implementa
 
 ## Output
 
-A structured code review with severity-labeled comments. Review is displayed in the user's local session. If the user requests it, post to GitHub as a PR review.
+A structured code review with severity-labeled comments posted as **pending** (draft) review comments on the PR by default. The user can override this to display comments in chat or post them directly to the PR instead.
 
 ## Review Process
 
@@ -106,15 +106,57 @@ Use these in every comment:
 - [ ] All `blocking` issues are clearly flagged
 - [ ] No unaccounted regression risk
 - [ ] Summary comment provided with overall assessment
-- [ ] Review is displayed to the user in their local session
+- [ ] Comments delivered via the configured mode (pending review by default)
 
 ## Post-Review Actions
 
-**Default:** Display the review in the user's local session.
+### Comment delivery modes
 
-**If user requests posting to GitHub:** Use the GitHub API to post the review as a PR comment with the full assessment and severity labels intact.
+| Mode | When | Behavior |
+|------|------|----------|
+| **Pending (default)** | No override from user | Comments are created as a **pending** (draft) GitHub review. The author can see them and the reviewer can submit/discard the review at their discretion. |
+| **Direct** | User says "post directly" | Comments are submitted immediately as a published PR review (`"event": "COMMENT"`). |
+| **Chat** | User says "post in chat" / "show me here" | Comments are displayed in the local session only — nothing is posted to GitHub. |
 
-**Self-review (PR author = reviewer):** After completing the review, check off any test plan checkboxes in the PR description that are verified by the code. Read the PR body, identify `- [ ]` items, verify each against the diff/code, and update the PR description via `gh pr edit` with the confirmed items changed to `- [x]`. Only check items you can confidently verify from the code — leave unchecked items that require manual/visual testing you cannot confirm.
+### Creating a pending review (default)
+
+Use a single `gh api` call to create the review with all comments at once. **Omit the `event` field entirely** — that is what makes the review pending. Including `"event": "COMMENT"` submits immediately; `"event": "PENDING"` is not a valid value and will error.
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+  --method POST \
+  --input - <<'EOF'
+{
+  "comments": [
+    {
+      "path": "path/to/file.ts",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "🔴 [blocking] Your comment here"
+    }
+  ]
+}
+EOF
+```
+
+For **multi-line comments** (highlighting a range of lines):
+
+```json
+{
+  "path": "path/to/file.ts",
+  "start_line": 38,
+  "line": 42,
+  "start_side": "RIGHT",
+  "side": "RIGHT",
+  "body": "Comment spanning lines 38-42"
+}
+```
+
+Batch all review comments into the single `comments` array — do not make separate API calls per comment.
+
+### Self-review (PR author = reviewer)
+
+After completing the review, check off any test plan checkboxes in the PR description that are verified by the code. Read the PR body, identify `- [ ]` items, verify each against the diff/code, and update the PR description via `gh pr edit` with the confirmed items changed to `- [x]`. Only check items you can confidently verify from the code — leave unchecked items that require manual/visual testing you cannot confirm.
 
 ## Authorship
 
