@@ -73,7 +73,8 @@ type(scope): description
 
 ### What to include
 
-- **Summary** — what changed and why, in a few bullet points
+- **Problem** — what was going wrong, why it needs fixing, and any relevant context
+- **Solution** — high-level approach taken and what was implemented
 - **Breaking changes** — call these out explicitly if present
 - **Issue references** — link related issues with `Closes #123` or `Fixes #123` to auto-close them on merge
 - **Checklist** — manual sanity check test cases (see [Checklists and Review Criteria](#checklists-and-review-criteria))
@@ -124,8 +125,8 @@ feat(component-name): add new functionality
 - Any relevant context
 
 ## Solution
-- High-level approach taken to fix it
-- What was implemented
+- High-level approach taken to fix it 
+- What was implemented (list)
 
 ## Breaking Changes
 - List any breaking changes here, or state "None"
@@ -172,7 +173,8 @@ Examples:
 
 ### Step 4: Write the Description
 
-- **Summary** — 2-3 bullet points on what changed and why
+- **Problem** — what was going wrong, why it needs fixing, relevant context
+- **Solution** — high-level approach and what was implemented
 - **Breaking changes** — explicitly call out if present
 - **Issue references** — use `Closes` or `Fixes` syntax
 - **Checklist** — manual sanity check test cases (`- [ ]`), derived from the diff; 3–5 focused items unless the change is trivial (see [Checklists and Review Criteria](#checklists-and-review-criteria))
