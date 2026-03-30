@@ -76,7 +76,7 @@ type(scope): description
 - **Summary** — what changed and why, in a few bullet points
 - **Breaking changes** — call these out explicitly if present
 - **Issue references** — link related issues with `Closes #123` or `Fixes #123` to auto-close them on merge
-- **Custom checklist** — specific, verifiable review criteria
+- **Checklist** — manual sanity check test cases (see [Checklists and Review Criteria](#checklists-and-review-criteria))
 
 ### Formatting
 
@@ -86,22 +86,28 @@ type(scope): description
 
 ## Checklists and Review Criteria
 
-PR authors provide **custom checklist items** as review criteria. These should be specific, verifiable assertions about the changes.
+The PR **Checklist** is not a code-review rubric — it is a set of **manual sanity check test cases** for the author to run **before merge** (browser, CLI, API, etc.).
+
+### What to include
+
+- Inspect the PR diff (and commits) to infer what user-visible or runtime behavior changed.
+- Each item is one markdown checkbox: `- [ ] ...`
+- Write **concrete steps** with **expected results** — not vague goals.
+- Cover happy paths and obvious regression spots for surfaces this PR touches.
+- If the change is docs-only, infra-only, or otherwise not meaningfully manually testable, use a minimal list (e.g. one item to skim rendered output or confirm CI) rather than inventing fake UI steps.
 
 ### Writing good checklist items
 
-Each checkbox should be something a reviewer can verify by reading the diff, running a command, or inspecting the codebase. Be specific:
-
-- **Good:** `- [ ] New exports are added to src/index.ts`
-- **Good:** `- [ ] No hardcoded values — all values use configuration or constants`
-- **Bad:** `- [ ] Code looks good`
-- **Bad:** `- [ ] Ready for review`
+- **Good:** `- [ ] Start the app, open Settings → Notifications, toggle email off, save — confirm the preference persists after refresh`
+- **Good:** `- [ ] POST /api/widgets with a valid payload — expect 201 and id in the response body`
+- **Bad:** `- [ ] Make sure it works`
+- **Bad:** `- [ ] New exports are added to src/index.ts` (that’s a review/diff check, not a manual sanity test)
 
 ### Rules
 
-- Checklist items must be verifiable
-- All boxes should be checked before the PR is considered ready for merge
-- If something isn't done yet, remove the checkbox or convert it to a follow-up issue — don't leave unchecked boxes lingering
+- Derive cases from **this PR’s actual changes**, not generic project smoke tests unless the diff warrants them.
+- Prefer **fewer, sharper** items over a long generic list.
+- All boxes should be checked before merge; if a step doesn’t apply, remove it or replace it — don’t leave meaningless unchecked boxes
 
 ## Authorship
 
@@ -112,10 +118,14 @@ Each checkbox should be something a reviewer can verify by reading the diff, run
 ```
 feat(component-name): add new functionality
 
-## Summary
-- What was implemented
-- Why it was needed
+## Problem
+- What was going wrong
+- Why it needs fixing
 - Any relevant context
+
+## Solution
+- High-level approach taken to fix it
+- What was implemented
 
 ## Breaking Changes
 - List any breaking changes here, or state "None"
@@ -124,10 +134,9 @@ feat(component-name): add new functionality
 Closes #123
 Fixes #456
 
-## Checklist
-- [ ] Verifiable checklist item 1
-- [ ] Verifiable checklist item 2
-- [ ] Verifiable checklist item 3
+## Manual sanity checks to be run before merge
+- [ ] Specific manual test from this PR: action → expected result
+- [ ] Another check if the diff touches multiple surfaces
 ```
 
 ## Steps
@@ -144,7 +153,7 @@ Fixes #456
 - Understand what was implemented
 - Identify related issues or tickets (GitHub issues, etc., in addition to Linear)
 - Determine if there are any breaking changes
-- Know what specific items need to be verified in review
+- Know what manual sanity checks belong in the checklist for this change
 
 ### Step 2: Determine Type and Scope
 
@@ -166,7 +175,7 @@ Examples:
 - **Summary** — 2-3 bullet points on what changed and why
 - **Breaking changes** — explicitly call out if present
 - **Issue references** — use `Closes` or `Fixes` syntax
-- **Custom checklist** — 3-5 specific, verifiable items relevant to the work
+- **Checklist** — manual sanity check test cases (`- [ ]`), derived from the diff; 3–5 focused items unless the change is trivial (see [Checklists and Review Criteria](#checklists-and-review-criteria))
 
 ### Step 5: Display the PR
 
@@ -178,7 +187,7 @@ Show the user the PR title, description, and checklist. If they approve, create 
 - [ ] Title follows conventional commit format
 - [ ] Type and scope are appropriate for the work
 - [ ] Description includes summary, issue references, and breaking changes (if any)
-- [ ] Checklist items are specific and verifiable
+- [ ] Checklist items are manual sanity check test cases (concrete, tied to this PR’s changes)
 - [ ] All formatting is clean and readable
 - [ ] PR is ready to be created
 
@@ -186,7 +195,7 @@ Show the user the PR title, description, and checklist. If they approve, create 
 
 - **Linear ticket in branch name is mandatory.** No PR flow without it — stop and ask if absent.
 - **Be concise.** PR titles feed into changelogs and commit histories.
-- **Be specific in checklists.** Vague criteria waste reviewer time.
+- **Checklist = manual sanity checks.** Every PR must include `- [ ]` test cases derived from the diff for the author to run before merge — not diff-review bullet points.
 - **Call out breaking changes explicitly.** Don't bury them in the description.
 - **Link issues properly.** Use `Closes` or `Fixes` to auto-close related work.
 - **Preserve authorship integrity.** The human owns the code and decisions.
