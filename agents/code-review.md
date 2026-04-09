@@ -18,7 +18,7 @@ Ensure structural and systemic quality of a PR. You validate that the implementa
 
 ## Output
 
-A structured code review with severity-labeled comments posted as **pending** (draft) review comments on the PR by default. The user can override this to display comments in chat or post them directly to the PR instead.
+A structured code review with severity-labeled comments. The default delivery channel depends on whether the user is the PR author — see [Comment delivery modes](#comment-delivery-modes). The user can always override the default explicitly.
 
 ## Review Process
 
@@ -106,19 +106,52 @@ Use these in every comment:
 - [ ] All `blocking` issues are clearly flagged
 - [ ] No unaccounted regression risk
 - [ ] Summary comment provided with overall assessment
-- [ ] Comments delivered via the configured mode (pending review by default)
+- [ ] Authorship determined and correct delivery mode applied
 
 ## Post-Review Actions
 
+### Determine authorship
+
+Before choosing a delivery mode, determine whether the user is the PR author:
+
+```bash
+gh pr view <pr_number> --json author --jq '.author.login'
+```
+
+Compare against the user's GitHub username. If unknown, resolve it with `gh api user --jq '.login'`.
+
 ### Comment delivery modes
 
-| Mode | When | Behavior |
-|------|------|----------|
-| **Pending (default)** | No override from user | Comments are created as a **pending** (draft) GitHub review. The author can see them and the reviewer can submit/discard the review at their discretion. |
-| **Direct** | User says "post directly" | Comments are submitted immediately as a published PR review (`"event": "COMMENT"`). |
-| **Chat** | User says "post in chat" / "show me here" | Comments are displayed in the local session only — nothing is posted to GitHub. |
+The default mode depends on authorship. The user can always override by saying "post in chat", "post directly", etc.
 
-### Creating a pending review (default)
+#### When the user is **not** the PR author (default)
+
+Split feedback across two channels:
+
+| Severity | Where |
+|----------|-------|
+| `nit` | Chat only |
+| `learning` | Chat only |
+| `praise` | Chat only |
+| `suggestion` | Pending (draft) review comment on the PR |
+| `blocking` | Pending (draft) review comment on the PR |
+| `important` | Pending (draft) review comment on the PR |
+
+This keeps the PR comment thread focused on actionable feedback while still surfacing lighter observations to the user in the chat.
+
+#### When the user **is** the PR author (default)
+
+Post **all** comments in the chat. Do not post anything to the PR. The user is doing a self-review and wants a second pair of eyes — keep everything conversational so they can decide what to act on.
+
+#### Explicit overrides
+
+| Override | Trigger | Behavior |
+|----------|---------|----------|
+| **All pending** | User says "post all to PR" / "draft review" | All comments become pending (draft) review comments on the PR, regardless of severity. |
+| **All direct** | User says "post directly" / "submit review" | All comments are submitted immediately as a published PR review (`"event": "COMMENT"`). |
+| **All chat** | User says "post in chat" / "show me here" | All comments are displayed in the local session only — nothing is posted to GitHub. |
+
+### Creating a pending review
 
 Use a single `gh api` call to create the review with all comments at once. **Omit the `event` field entirely** — that is what makes the review pending. Including `"event": "COMMENT"` submits immediately; `"event": "PENDING"` is not a valid value and will error.
 
