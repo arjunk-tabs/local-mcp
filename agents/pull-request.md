@@ -18,11 +18,8 @@ Create well-structured pull requests that follow conventions and provide clear c
 
 ## Branch name and Linear ticket
 
-Every PR branch must embed the **Linear issue ID** so work stays traceable to a ticket.
-
-- **Allowed prefixes (case-insensitive):** `TAB`, `AI`, `COR`, `SPEC`, `FIRE`, `TOR`, `ERP`, `PLA`, `BIL`, `CMG`, `BUG`, `FE`, `PLT`
-- **Format:** The branch name must contain one of the allowed prefixes followed by a hyphen and a number (e.g. `TAB-123`, `ai-456`, `FE-78`). Typical patterns: `feat/TAB-123-short-slug`, `TAB-123-feat-short-slug`, or `arjun/FE-123-description`.
-- **Detection:** After resolving the checked-out branch (`git branch --show-current`), match the case-insensitive pattern `(TAB|AI|COR|SPEC|FIRE|TOR|ERP|PLA|BIL|CMG|BUG|FE|PLT)-[0-9]+` anywhere in the branch name.
+Every PR branch must embed the **Linear issue ID** so work stays traceable to a ticket. 
+And use the format: `${type}/${linear issue id}/${short description}` where type is from the allowed types in the PR title format section
 
 ### If the branch has no Linear ticket
 
@@ -145,7 +142,6 @@ Fixes #456
 ### Step 0: Verify branch name includes Linear ticket
 
 - Resolve the current branch name (e.g. `git branch --show-current`).
-- Check that it contains one of the allowed Linear prefixes (`TAB`, `AI`, `COR`, `SPEC`, `FIRE`, `TOR`, `ERP`, `PLA`, `BIL`, `CMG`, `BUG`, `FE`, `PLT`) followed by `-` and a number (case-insensitive match).
 - **If missing:** follow [If the branch has no Linear ticket](#if-the-branch-has-no-linear-ticket) and do not proceed to Step 1 until fixed.
 
 ### Step 1: Gather Context
