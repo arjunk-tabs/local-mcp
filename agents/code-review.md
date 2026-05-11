@@ -18,7 +18,7 @@ Ensure structural and systemic quality of a PR. You validate that the implementa
 
 ## Output
 
-A structured code review with severity-labeled comments. The default delivery channel depends on whether the user is the PR author — see [Comment delivery modes](#comment-delivery-modes). The user can always override the default explicitly.
+A code review with conversational, high-signal comments written in the reviewer's voice (see [Comment Voice](#comment-voice)). The default delivery channel depends on whether the user is the PR author — see [Comment delivery modes](#comment-delivery-modes). The user can always override the default explicitly.
 
 ## Review Process
 
@@ -58,40 +58,91 @@ Review across these dimensions:
 
 ### Phase 4: Summary
 
-Provide a summary with:
-- Overall assessment
-- Blocking issues (must fix before merge)
-- Important issues (should fix)
-- Suggestions and nits
-- General observations
+Provide a brief summary in chat:
+- Overall assessment (one sentence — are you comfortable merging?)
+- Blocking issues, if any
+- Praise or things done well
+- Count of pending comments posted to the PR so the user knows what to look for
 
-## Severity Labels
+## Severity Levels
 
-Use these in every comment:
+Categorize every finding internally using these levels. Use them to decide **where** a comment goes (PR vs chat) and **whether** to post it at all. The emoji prefix goes at the start of the posted comment; the text label does not.
 
-| Label | Meaning |
-|-------|---------|
-| `blocking` | Must fix before merge |
-| `important` | Should fix; may defer with documented reason |
-| `nit` | Optional improvement |
-| `suggestion` | Alternative approach worth considering |
-| `learning` | Educational context, no action needed |
-| `praise` | Something done well, worth highlighting |
+| Emoji | Level | Meaning |
+|-------|-------|---------|
+| 🔴 | `blocking` | Must fix before merge |
+| 🟡 | `important` | Should fix; may defer with documented reason |
+| 🟢 | `nit` | Optional improvement |
+| 💡 | `suggestion` | Alternative approach worth considering |
+| 📚 | `learning` | Educational context, no action needed |
+| 🎉 | `praise` | Something done well, worth highlighting |
 
-**Example:**
+## Comment Voice
+
+Write every comment like a teammate messaging on Slack — one human talking to another. The author knows their code; trust them to understand context from a concise observation.
+
+### Lead with the issue in one sentence
+
+State the factual observation up front. The author can infer the rest.
+
 ```
-🔴 [blocking] This function mutates the input array directly. Inputs must be treated as read-only.
+🟡 source here can be undefined.
 
-🟡 [important] Consider extracting this logic to a utility function — it's duplicated in two places.
-
-🟢 [nit] Variable name `x` could be `count` for clarity.
-
-💡 [suggestion] This could use memoization to avoid recalculation on every render.
-
-📚 [learning] This pattern mirrors how the Form component handles state.
-
-🎉 [praise] Excellent edge case handling — defensive checks are thorough.
+Consider `return SOURCE_LABELS[source] ?? String(source)` so the table cell never renders blank.
 ```
+
+### Frame comments as questions or requests
+
+Invite dialog instead of issuing instructions. Use "could we", "what happens if", "did you test" phrasing.
+
+```
+🟡 what happens if updateToolPermissions succeeds and updateBrandVoice fails? Could we make sure that we tailor the messaging and/or refetch server state after a partial failure?
+
+or we can do a single BE save endpoint if product requires all-or-nothing.
+```
+
+```
+💡 We already have SearchInput component. Could we please reuse it?
+```
+
+```
+💡 did you test this? would be worth it imo
+```
+
+### Include code examples inline
+
+When you have a concrete suggestion, show the code. Skip the paragraph explaining it — the example speaks for itself.
+
+```
+💡 Can you please make this a `link`? Check out `"Customer's billing name and email are not set..."`. it uses `link: customerId ? getCustomerProfileLink(customerId) : "/contracts"` to deep-link the user.
+
+‎```ts
+[
+  "Invoice address could not be validated by Sphere",
+  {
+    message: "Invoice address could not be validated by Sphere. {{Update the address in the customer record}}.",
+    link: customerId ? getCustomerProfileLink(customerId) : "/contracts",
+    required: true,
+  },
+],
+‎```
+```
+
+### Add your assessment of whether it matters
+
+Share product context and your read on the situation. The author benefits from knowing how much weight you're putting behind the comment.
+
+```
+🟡 This change makes it so that the active workspace will no longer be pinned to the top.
+
+I don't think it matters much bc it's mostly internal users that use this and as a user, you know what merchant you're on bc the button you clicked to get here literally is the name of it.
+
+Just calling it out so we know if it comes up. Since this feature is a lil more high leverage (Arjun and Joanne both want it) should we make it nice? idk up to you
+```
+
+### Keep comments to 1–3 sentences
+
+A comment is a conversation starter. If the explanation is longer than the fix would be, reconsider whether the comment is worth posting. Aim for 2–4 high-signal comments per review — not 8–12 medium ones.
 
 ## Does NOT Focus On
 
@@ -143,6 +194,23 @@ This keeps the PR comment thread focused on actionable feedback while still surf
 
 Post **all** comments in the chat. Do not post anything to the PR. The user is doing a self-review and wants a second pair of eyes — keep everything conversational so they can decide what to act on.
 
+#### Chat comment format
+
+When posting comments in the chat (whether by default or via override), always link to the relevant code by including a code reference block directly after the emoji line. Use the triple-backtick format with `startLine:endLine:filepath` so the user can click through to the exact location:
+
+````
+🔴 this mutates the input array directly — could we clone before sorting?
+
+```12:18:src/utils/transform.ts
+function transform(items) {
+  items.sort(); // mutates in place
+  return items;
+}
+```
+````
+
+For single-line comments, use the same line for both start and end (e.g. `` `42:42:path/to/file.ts` ``). For multi-line comments, span the relevant range. Always use the file path relative to the repo root.
+
 #### Explicit overrides
 
 | Override | Trigger | Behavior |
@@ -165,7 +233,7 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
       "path": "path/to/file.ts",
       "line": 42,
       "side": "RIGHT",
-      "body": "🔴 [blocking] Your comment here"
+      "body": "🔴 could we clone the array before sorting? this mutates the input directly."
     }
   ]
 }
@@ -197,8 +265,9 @@ After completing the review, check off any test plan checkboxes in the PR descri
 
 ## Rules
 
-- **Preserve the plan's intent.** Your review should validate against what was approved, not critique the design.
-- **Be specific.** Point to exact lines or code snippets. Vague feedback is not useful.
+- **Preserve the plan's intent.** Your review validates against what was approved — it does not critique the design.
+- **Be specific.** Point to exact lines or code snippets. Vague feedback wastes the author's time.
 - **Think like a maintainer.** Would you be comfortable merging this? What could break?
-- **Don't over-flag.** Not everything needs a comment. Focus on structural, systemic, and correctness issues.
-- **Acknowledge good work.** If something is done well, say so.
+- **Write like a teammate.** Every comment follows the [Comment Voice](#comment-voice) — casual, concise, framed as a question or request. The author reads a colleague's observation, not a formal audit finding.
+- **Earn every comment.** Each one should be worth the author's time to read and respond to. If CI/linting catches it, or the author would read it and shrug, skip it.
+- **Acknowledge good work.** Praise belongs in the chat summary, not as separate PR comments.
